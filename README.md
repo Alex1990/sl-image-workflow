@@ -4,7 +4,8 @@ A workflow shell script to handle the images
 ## Installation
 
 ```shell
-curl -s https://raw.githubusercontent.com/Alex1990/sl-image-workflow/master/install.sh?token=AC_wL_7TXeqqtVe5PfsvsBN1YWZhXT_1ks5XPePzwA%3D%3D | bash```
+curl -s https://raw.githubusercontent.com/Alex1990/sl-image-workflow/master/install.sh?token=AC_wL_7TXeqqtVe5PfsvsBN1YWZhXT_1ks5XPePzwA%3D%3D | bash
+```
 
 ## Usage
 
