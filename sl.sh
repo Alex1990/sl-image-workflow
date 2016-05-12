@@ -33,9 +33,11 @@ SL_MAX_SIZE=1080
 
 # Read config file
 
-. /etc/sl_image_workflow.cfg
+if [[ -r /etc/sl_image_workflow.cfg ]]; then
+  . /etc/sl_image_workflow.cfg
+fi
 
-if [ -r ~/.slrc ]; then
+if [[ -r ~/.slrc ]]; then
   . ~/.slrc
 fi
 
