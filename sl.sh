@@ -25,11 +25,19 @@ display_help() {
 EOF
 }
 
-SL_WORK_DIR="/Users/chaoalex/Downloads/shenlan/"
+SL_WORK_DIR="$HOME/shenlan/"
 SL_TMP_HUB="${SL_WORK_DIR}tmp_hub/"
 SL_PATCH_META="${SL_TMP_HUB}patch_meta"
 SL_MIN_SIZE=500
 SL_MAX_SIZE=1080
+
+# Read config file
+
+. /etc/sl_image_workflow.cfg
+
+if [ -r ~/.slrc ]; then
+  . ~/.slrc
+fi
 
 function transfer() {
   local old_works_dir
