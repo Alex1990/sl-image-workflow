@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.1.0"
+VERSION="0.2.0"
 
 display_version() {
   echo $VERSION
@@ -14,7 +14,7 @@ display_help() {
   Options:
 
     -c, --check     Check the dimensions, ratio, filetype etc
-    -n, --normalize Normalize the filename
+    -n, --normalize Normalize the filename, filetype, filesize etc
     -r, --recevie   Unzip the file to destination, make a same name directory
     -s, --send      Zip the folder
         --sum       Count the handled pictures
@@ -29,7 +29,7 @@ SL_WORK_DIR="$HOME/shenlan/"
 SL_TMP_HUB="${SL_WORK_DIR}tmp_hub/"
 SL_PATCH_META="${SL_TMP_HUB}patch_meta"
 SL_MIN_SIZE=500
-SL_MAX_SIZE=1080
+SL_MAX_SIZE=1000
 
 # Read config file
 
@@ -41,7 +41,79 @@ if [[ -r ~/.slrc ]]; then
   . ~/.slrc
 fi
 
-function transfer() {
+# Normalize the images
+# - Convert gif, png to jpg
+# - Convert to a square
+# - Convert to the range of SL_MIN_SIZE and SL_MAX_SIZE
+normalize() {
+  local target_dir="$1"
+  local mime;
+  local filename;
+  local width
+  local height
+  declare -a dimension
+
+  if [[ -z "$target_dir" || ! -d "$target_dir" ]]; then
+    if [[ -d "$SL_TMP_HUB" ]]; then
+      target_dir="$SL_TMP_HUB"
+    else
+      echo "${SL_TMP_HUB} isn't exists."
+    fi
+  fi
+
+  if [[ "$target_dir" != */ ]]; then
+    target_dir="${target_dir}/"
+  fi
+
+  if [[ -d "$target_dir" ]]; then
+    find -d "${target_dir}" -type f -print | while read f; do
+      mime=$(file --brief --mime-type "$f" | tr -d "\n")
+
+      if [[ "$mime" = "image/gif" || "$mime" = "image/png" || "$mime" = "image/jpeg" ]]; then
+
+        filename="${f%.*}"
+        # Convert gif or png to jpg
+        if [[ "$mime" = "image/gif" || "$mime" = "image/png" ]]; then
+          convert "$f" "${filename}.jpg"
+          rm -f "$f"
+        fi
+
+        if [[ 0 -eq 0 ]]; then
+          IFS=" " read -a dimension <<< $(identify -format "%w %h" "$f")
+          width=$((dimension[0]))
+          height=$((dimension[1]))
+
+          # Convert to a square
+          if [[ "$width" -ne "$height" ]]; then
+            if [[ "$width" -lt "$height" ]]; then
+              width=$((height))
+            else
+              height=$((width))
+            fi
+            # Todo: Change tmp filename and location
+            convert -size "${width}x${height}" xc:white /tmp/_sl_tmp.jpg
+            convert -gravity center /tmp/_sl_tmp.jpg "$f" -composite "$f"
+            rm -f /tmp/_sl_tmp.jpg
+            echo "$f"
+          fi
+
+          # Scale
+          if [[ "$width" -lt "$SL_MIN_SIZE" ]]; then
+            convert "$f" -resize "${SL_MIN_SIZE}x${SL_MIN_SIZE}" "$f"
+          fi
+
+          if [[ "$width" -gt "$SL_MAX_SIZE" ]]; then
+            convert "$f" -resize "${SL_MAX_SIZE}x${SL_MAX_SIZE}" "$f"
+          fi
+        fi
+      fi
+    done
+  fi
+
+  exit 0
+}
+
+transfer() {
   local old_works_dir
 
   if [[ -f "$SL_PATCH_META" ]]; then
@@ -66,7 +138,6 @@ init_tmp_hub() {
   transfer && echo "$new_works_dir" > "$SL_PATCH_META"
 }
 
-#Todo: Convert non-jpg to jpg format
 receive() {
   local zip_pathname="$1"
   local zip_basename=$(basename "$zip_pathname" ".zip")
@@ -91,11 +162,6 @@ send() {
   else
     echo "file must be exist and a folder"
   fi
-}
-
-normalize() {
-  # Photoshop 已经处理好了，暂时不需要这一步
-  ren "* copy.jpg" "#1.jpg"
 }
 
 check() {
