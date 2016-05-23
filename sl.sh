@@ -18,7 +18,7 @@ display_help() {
     -r, --recevie   Unzip the file to destination, make a same name directory
     -s, --send      Zip the folder
         --sum       Count the handled pictures
-    -t, --transfer  Transfer the pictures in SL_TMP_HUB to a new directory
+    -t, --transfer  Transfer the pictures in SL_TMP_DEST to a new directory
     -h, --help      Display help information
     -v, --version   Output current version of sl
 
@@ -26,8 +26,8 @@ EOF
 }
 
 SL_WORK_DIR="$HOME/shenlan/"
-SL_TMP_HUB="${SL_WORK_DIR}tmp_hub/"
-SL_PATCH_META="${SL_TMP_HUB}patch_meta"
+SL_TMP_DEST="${SL_WORK_DIR}tmp_dest/"
+SL_PATCH_META="${SL_TMP_DEST}patch_meta"
 SL_MIN_SIZE=500
 SL_MAX_SIZE=1000
 
@@ -54,57 +54,57 @@ normalize() {
   declare -a dimension
 
   if [[ -z "$target_dir" || ! -d "$target_dir" ]]; then
-    if [[ -d "$SL_TMP_HUB" ]]; then
-      target_dir="$SL_TMP_HUB"
+    if [[ -d "$SL_TMP_DEST" ]]; then
+      target_dir="$SL_TMP_DEST"
     else
-      echo "${SL_TMP_HUB} isn't exists."
+      echo "${SL_TMP_DEST} isn't exists."
     fi
-  fi
-
-  if [[ "$target_dir" != */ ]]; then
-    target_dir="${target_dir}/"
   fi
 
   if [[ -d "$target_dir" ]]; then
     find -d "${target_dir}" -type f -print | while read f; do
       mime=$(file --brief --mime-type "$f" | tr -d "\n")
 
-      if [[ "$mime" = "image/gif" || "$mime" = "image/png" || "$mime" = "image/jpeg" ]]; then
+      filename="${f%.*}"
+      # Convert gif or png to jpg
+      if [[ "$mime" = "image/gif" || "$mime" = "image/png" ]]; then
+        convert "$f" "${filename}.jpg"
+        rm -f "$f"
+      fi
+    done
+  fi
 
-        filename="${f%.*}"
-        # Convert gif or png to jpg
-        if [[ "$mime" = "image/gif" || "$mime" = "image/png" ]]; then
-          convert "$f" "${filename}.jpg"
-          rm -f "$f"
+  if [[ -d "$target_dir" ]]; then
+    find -d "${target_dir}" -type f -print | while read f; do
+      mime=$(file --brief --mime-type "$f" | tr -d "\n")
+
+      if [[ "$mime" = "image/jpeg" ]]; then
+
+        IFS=" " read -a dimension <<< $(identify -format "%w %h" "$f")
+        width=$((dimension[0]))
+        height=$((dimension[1]))
+
+        # Convert to a square
+        if [[ "$width" -ne "$height" ]]; then
+          if [[ "$width" -lt "$height" ]]; then
+            width=$((height))
+          else
+            height=$((width))
+          fi
+          # Todo: Change tmp filename and location
+          convert -size "${width}x${height}" xc:white /tmp/_sl_tmp.jpg
+          convert -gravity center /tmp/_sl_tmp.jpg "$f" -composite "$f"
+          rm -f /tmp/_sl_tmp.jpg
+          echo "$f"
         fi
 
-        if [[ 0 -eq 0 ]]; then
-          IFS=" " read -a dimension <<< $(identify -format "%w %h" "$f")
-          width=$((dimension[0]))
-          height=$((dimension[1]))
+        # Scale
+        if [[ "$width" -lt "$SL_MIN_SIZE" ]]; then
+          convert "$f" -resize "${SL_MIN_SIZE}x${SL_MIN_SIZE}" "$f"
+        fi
 
-          # Convert to a square
-          if [[ "$width" -ne "$height" ]]; then
-            if [[ "$width" -lt "$height" ]]; then
-              width=$((height))
-            else
-              height=$((width))
-            fi
-            # Todo: Change tmp filename and location
-            convert -size "${width}x${height}" xc:white /tmp/_sl_tmp.jpg
-            convert -gravity center /tmp/_sl_tmp.jpg "$f" -composite "$f"
-            rm -f /tmp/_sl_tmp.jpg
-            echo "$f"
-          fi
-
-          # Scale
-          if [[ "$width" -lt "$SL_MIN_SIZE" ]]; then
-            convert "$f" -resize "${SL_MIN_SIZE}x${SL_MIN_SIZE}" "$f"
-          fi
-
-          if [[ "$width" -gt "$SL_MAX_SIZE" ]]; then
-            convert "$f" -resize "${SL_MAX_SIZE}x${SL_MAX_SIZE}" "$f"
-          fi
+        if [[ "$width" -gt "$SL_MAX_SIZE" ]]; then
+          convert "$f" -resize "${SL_MAX_SIZE}x${SL_MAX_SIZE}" "$f"
         fi
       fi
     done
@@ -121,10 +121,10 @@ transfer() {
     if [[ -n "$old_works_dir" ]]; then
       if [[ ! -d "$old_works_dir" ]]; then
         mkdir "$old_works_dir" \
-          && mv ${SL_TMP_HUB}*.jpg "$old_works_dir" \
+          && mv ${SL_TMP_DEST}*.jpg "$old_works_dir" \
           && echo "" > "$SL_PATCH_META"
       else
-        mv ${SL_TMP_HUB}*.jpg "$old_works_dir" \
+        mv ${SL_TMP_DEST}*.jpg "$old_works_dir" \
           && echo "" > "$SL_PATCH_META"
       fi
     fi
@@ -145,6 +145,7 @@ receive() {
 
   if [[ -f "$zip_pathname" && "$zip_pathname" == *.zip ]]; then
     unzip -d "$SL_WORK_DIR" "$zip_pathname" -x "__MACOSX/*" \
+      && normalize "${SL_WORK_DIR}${zip_basename}" \
       && init_tmp_hub "$works_dir"
   else
     echo "${zip_pathname}: isn't exist or not a zip file"
@@ -174,10 +175,10 @@ check() {
   local ok_count=0
 
   if [[ -z "$target_dir" || ! -d "$target_dir" ]]; then
-    if [[ -d "$SL_TMP_HUB" ]]; then
-      target_dir="$SL_TMP_HUB"
+    if [[ -d "$SL_TMP_DEST" ]]; then
+      target_dir="$SL_TMP_DEST"
     else
-      echo "${SL_TMP_HUB} isn't exists."
+      echo "${SL_TMP_DEST} isn't exists."
     fi
   fi
 
