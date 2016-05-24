@@ -145,8 +145,8 @@ receive() {
 
   if [[ -f "$zip_pathname" && "$zip_pathname" == *.zip ]]; then
     unzip -d "$SL_WORK_DIR" "$zip_pathname" -x "__MACOSX/*" \
-      && normalize "${SL_WORK_DIR}${zip_basename}" \
-      && init_tmp_hub "$works_dir"
+      && (normalize "${SL_WORK_DIR}${zip_basename}"; \
+      init_tmp_hub "$works_dir")
   else
     echo "${zip_pathname}: isn't exist or not a zip file"
   fi
