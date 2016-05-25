@@ -114,7 +114,7 @@ normalize() {
     done
   fi
 
-  exit 0
+  return $?
 }
 
 transfer() {
@@ -133,6 +133,7 @@ transfer() {
       fi
     fi
   fi
+
   return $?
 }
 
@@ -155,7 +156,7 @@ receive() {
     echo "${zip_pathname}: isn't exist or not a zip file"
   fi
   
-  exit
+  return 0
 }
 
 send() {
