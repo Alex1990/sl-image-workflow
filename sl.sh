@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.3.0"
+VERSION="0.3.1"
 
 display_version() {
   echo $VERSION
@@ -18,7 +18,7 @@ display_help() {
     -r, --recevie   Unzip the file to destination, make a same name directory
     -s, --send      Zip the folder
         --sum       Count the handled pictures
-    -t, --transfer  Transfer the pictures in SL_TMP_DEST to a new directory
+    -t, --transfer  Transfer the pictures in SL_TMP_HUB to a new directory
     -h, --help      Display help information
     -v, --version   Output current version of sl
 
@@ -26,8 +26,8 @@ EOF
 }
 
 SL_WORK_DIR="$HOME/shenlan/"
-SL_TMP_DEST="${SL_WORK_DIR}tmp_dest/"
-SL_PATCH_META="${SL_TMP_DEST}patch_meta"
+SL_TMP_HUB="tmp_hub/"
+SL_PATCH_META="patch_meta"
 SL_MIN_SIZE=500
 SL_MAX_SIZE=1000
 
@@ -40,6 +40,10 @@ fi
 if [[ -r ~/.slrc ]]; then
   . ~/.slrc
 fi
+
+# Convert to absolute path
+SL_TMP_HUB="${SL_WORK_DIR}${SL_TMP_HUB}"
+SL_PATCH_META="${SL_WORK_DIR}${SL_PATCH_META}"
 
 # Normalize the images
 # - Convert gif, png to jpg
@@ -54,10 +58,10 @@ normalize() {
   declare -a dimension
 
   if [[ -z "$target_dir" || ! -d "$target_dir" ]]; then
-    if [[ -d "$SL_TMP_DEST" ]]; then
-      target_dir="$SL_TMP_DEST"
+    if [[ -d "$SL_TMP_HUB" ]]; then
+      target_dir="$SL_TMP_HUB"
     else
-      echo "${SL_TMP_DEST} isn't exists."
+      echo "${SL_TMP_HUB} isn't exists."
     fi
   fi
 
@@ -121,10 +125,10 @@ transfer() {
     if [[ -n "$old_works_dir" ]]; then
       if [[ ! -d "$old_works_dir" ]]; then
         mkdir "$old_works_dir" \
-          && mv ${SL_TMP_DEST}*.jpg "$old_works_dir" \
+          && mv ${SL_TMP_HUB}*.jpg "$old_works_dir" \
           && echo "" > "$SL_PATCH_META"
       else
-        mv ${SL_TMP_DEST}*.jpg "$old_works_dir" \
+        mv ${SL_TMP_HUB}*.jpg "$old_works_dir" \
           && echo "" > "$SL_PATCH_META"
       fi
     fi
@@ -175,10 +179,10 @@ check() {
   local ok_count=0
 
   if [[ -z "$target_dir" || ! -d "$target_dir" ]]; then
-    if [[ -d "$SL_TMP_DEST" ]]; then
-      target_dir="$SL_TMP_DEST"
+    if [[ -d "$SL_TMP_HUB" ]]; then
+      target_dir="$SL_TMP_HUB"
     else
-      echo "${SL_TMP_DEST} isn't exists."
+      echo "${SL_TMP_HUB} isn't exists."
     fi
   fi
 
