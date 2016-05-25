@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.3.1"
+VERSION="0.3.2"
 
 display_version() {
   echo $VERSION
@@ -118,17 +118,22 @@ normalize() {
 }
 
 transfer() {
+  local src_dir="$1"
   local old_works_dir
+
+  if [[ -z "$src_dir" || ! -d "$src_dir" ]]; then
+    src_dir="$SL_TMP_HUB"
+  fi
 
   if [[ -f "$SL_PATCH_META" ]]; then
     old_works_dir=$(head -1 "$SL_PATCH_META" | tr -d "\n")
     if [[ -n "$old_works_dir" ]]; then
       if [[ ! -d "$old_works_dir" ]]; then
         mkdir "$old_works_dir" \
-          && mv ${SL_TMP_HUB}*.jpg "$old_works_dir" \
+          && mv ${src_dir}*.jpg "$old_works_dir" \
           && echo "" > "$SL_PATCH_META"
       else
-        mv ${SL_TMP_HUB}*.jpg "$old_works_dir" \
+        mv ${src_dir}*.jpg "$old_works_dir" \
           && echo "" > "$SL_PATCH_META"
       fi
     fi
@@ -265,7 +270,7 @@ else
       -r|--receive) receive "$2"; exit ;;
       -s|--send) send "$2"; exit ;;
          --sum) shift; count_total "$@"; exit ;;
-      -t|--transfer) check && transfer; exit ;;
+      -t|--transfer) check "$@" && transfer "$@"; exit ;;
       *) display_help; exit;;
     esac
     shift
