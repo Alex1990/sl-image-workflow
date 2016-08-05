@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.3.2"
+VERSION="0.3.3"
 
 display_version() {
   echo $VERSION
@@ -130,11 +130,9 @@ transfer() {
     if [[ -n "$old_works_dir" ]]; then
       if [[ ! -d "$old_works_dir" ]]; then
         mkdir "$old_works_dir" \
-          && mv ${src_dir}*.jpg "$old_works_dir" \
-          && echo "" > "$SL_PATCH_META"
+          && mv ${src_dir}*.jpg "$old_works_dir"
       else
-        mv ${src_dir}*.jpg "$old_works_dir" \
-          && echo "" > "$SL_PATCH_META"
+        mv ${src_dir}*.jpg "$old_works_dir"
       fi
     fi
   fi
@@ -167,6 +165,10 @@ receive() {
 send() {
   local filename="$1"
   local zipfilename="${filename}.zip"
+
+  if [[ -n "$filename" && -f "$SL_PATCH_META" ]]; then
+    filename=$(head -1 "$SL_PATCH_META" | tr -d "\n")
+  fi
 
   if [[ -d "$filename" ]]; then
     zip -r "${SL_WORK_DIR}$zipfilename" "$filename"
