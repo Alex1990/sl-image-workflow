@@ -170,7 +170,7 @@ send() {
   fi
 
   if [[ -d "$filename" ]]; then
-    zip -r "${SL_WORK_DIR}${filename}.zip" "$filename"
+    zip -r "${filename}.zip" "$filename"
   else
     echo "file must be exist and a folder"
   fi
