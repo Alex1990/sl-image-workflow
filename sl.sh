@@ -164,14 +164,13 @@ receive() {
 
 send() {
   local filename="$1"
-  local zipfilename="${filename}.zip"
 
   if [[ -z "$filename" && -f "$SL_PATCH_META" ]]; then
     filename=$(head -1 "$SL_PATCH_META" | tr -d "\n")
   fi
 
   if [[ -d "$filename" ]]; then
-    zip -r "${SL_WORK_DIR}$zipfilename" "$filename"
+    zip -r "${SL_WORK_DIR}${filename}.zip" "$filename"
   else
     echo "file must be exist and a folder"
   fi
