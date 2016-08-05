@@ -163,14 +163,20 @@ receive() {
 }
 
 send() {
-  local filename="$1"
+  local filepath="$1"
+  local filename
+  local parent_path
 
-  if [[ -z "$filename" && -f "$SL_PATCH_META" ]]; then
-    filename=$(head -1 "$SL_PATCH_META" | tr -d "\n")
+  if [[ -z "$filepath" && -f "$SL_PATCH_META" ]]; then
+    filepath=$(head -1 "$SL_PATCH_META" | tr -d "\n")
   fi
 
-  if [[ -d "$filename" ]]; then
+  if [[ -d "$filepath" ]]; then
+    parent_path=$(dirname "$filepath")
+    filename=$(basename "$filepath" | tr -d "\n")
+    cd "$parent_path"
     zip -r "${filename}.zip" "$filename"
+    cd -
   else
     echo "file must be exist and a folder"
   fi
