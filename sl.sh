@@ -143,7 +143,8 @@ transfer() {
 init_tmp_hub() {
   local new_works_dir="$1"
 
-  transfer && echo "$new_works_dir" > "$SL_PATCH_META"
+  transfer
+  echo "$new_works_dir" > "$SL_PATCH_META"
 }
 
 receive() {
