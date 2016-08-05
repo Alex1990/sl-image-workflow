@@ -166,7 +166,7 @@ send() {
   local filename="$1"
   local zipfilename="${filename}.zip"
 
-  if [[ -n "$filename" && -f "$SL_PATCH_META" ]]; then
+  if [[ -z "$filename" && -f "$SL_PATCH_META" ]]; then
     filename=$(head -1 "$SL_PATCH_META" | tr -d "\n")
   fi
 
