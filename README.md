@@ -4,7 +4,7 @@ A workflow shell script to handle the images
 ## Installation
 
 ```shell
-curl https://raw.githubusercontent.com/Alex1990/sl-image-workflow/master/sl.sh?token=AC_wL23jEyH6dVZGdT3l75Ys-bYnhf2Mks5Xrc8RwA%3D%3D -o /usr/local/bin/sl && chmod +x /usr/local/bin/sl
+curl https://raw.githubusercontent.com/Alex1990/sl-image-workflow/master/sl.sh?token=AC_wLx3G0cMdpyXnzDqJewtGm-HqHVGRks5XrdcmwA%3D%3D -o /usr/local/bin/sl && chmod +x /usr/local/bin/sl
 ```
 
 ## Usage
